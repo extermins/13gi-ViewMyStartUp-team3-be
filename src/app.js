@@ -17,9 +17,9 @@ app.get("/", (req, res) =>
 
 // 나의 기업 비교 - 기업 목록 조회
 app.get("/compare/companies", getCompanies);
-// 나의 기업 선택 - 기업 목록 조회
+// 나의 기업 비교 - 나의 기업 선택
 app.get("/compare/companies/:id/mypick", postMypick);
-// 비교 기업 선택 - 기업 목록 조회
+// 나의 기업 비교 - 비교 기업 선택
 app.get("/compare/companies/:id/comparison", postComparison);
 
 export default app;
