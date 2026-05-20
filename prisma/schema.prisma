@@ -15,29 +15,29 @@ datasource db {
 
 // casecade 필요는 없지만 일단넣음 map은 돌일해서 안넣음
 model company {
-  id               Int          @default(autoincrement())
-  name             String
-  description      String
-  headCount        Int
-  category         String
-  imageUrl         String
-  revenue          Int
-  mypick_count     Int
-  comparison_count Int
-  created_at       DateTime     @default(now())
-  updated_at       DateTime     @updatedAt
-  investments      investment[]
+  id              Int          @id @default(autoincrement())
+  name            String
+  description     String
+  headCount       Int
+  category        String
+  imageUrl        String?
+  revenue         Int
+  mypickCount     Int          @map("mypick_count")
+  comparisonCount Int          @map("comparison_count")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+  investments     investment[]
 }
 
 model investment {
-  id         Int      @default(autoincrement())
-  name       String
-  password   String
-  comment    String
-  amount     Int
-  company_id Int
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  name      String
+  password  String
+  comment   String
+  amount    Int
+  companyId Int      @map("company_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  company company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  company company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 }
