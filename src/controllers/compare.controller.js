@@ -39,7 +39,7 @@ export const postMypick = asyncHandler(async (req, res) => {
   }
 
   const mypick = await prisma.company.update({
-    where: { id: parseInt(id) },
+    where: { id: parsedId },
     select: { mypickCount: true },
     data: { mypickCount: { increment: 1 } },
   });
@@ -47,4 +47,19 @@ export const postMypick = asyncHandler(async (req, res) => {
   res.status(200).json({ data: mypick });
 });
 // 나의 기업 비교 - 비교 기업 선택
-export const postComparison = asyncHandler();
+export const postComparison = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const parsedId = parseInt(id);
+
+  if (isNaN(parsedId)) {
+    return res.status(400).json({ message: "id가 숫자가 아닙니다" });
+  }
+
+  const comparison = await prisma.company.update({
+    where: { id: parsedId },
+    select: { comparisonCount: true },
+    data: { comparisonCount: { increment: 1 } },
+  });
+
+  res.status(200).json({ data: comparison });
+});
