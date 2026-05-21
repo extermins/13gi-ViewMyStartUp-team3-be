@@ -21,7 +21,7 @@ model company {
   headCount       Int
   category        String
   imageUrl        String?
-  revenue         Int
+  revenue         BigInt
   mypickCount     Int          @map("mypick_count")
   comparisonCount Int          @map("comparison_count")
   createdAt       DateTime     @default(now()) @map("created_at")
@@ -34,7 +34,7 @@ model investment {
   name      String
   password  String
   comment   String
-  amount    Int
+  amount    BigInt
   companyId Int      @map("company_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
