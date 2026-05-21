@@ -30,6 +30,21 @@ export const getCompanies = asyncHandler(async (req, res) => {
   res.status(200).json({ data: companies, total });
 });
 // 나의 기업 비교 - 나의 기업 선택
-export const postMypick = asyncHandler();
+export const postMypick = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const parsedId = parseInt(id);
+
+  if (isNaN(parsedId)) {
+    return res.status(400).json({ message: "id가 숫자가 아닙니다" });
+  }
+
+  const mypick = await prisma.company.update({
+    where: { id: parseInt(id) },
+    select: { mypickCount: true },
+    data: { mypickCount: { increment: 1 } },
+  });
+
+  res.status(200).json({ data: mypick });
+});
 // 나의 기업 비교 - 비교 기업 선택
 export const postComparison = asyncHandler();
