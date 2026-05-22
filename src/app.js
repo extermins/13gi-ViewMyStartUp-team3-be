@@ -3,6 +3,7 @@ import cors from "cors";
 import startupRoutes from "./routes/startups.js";
 import investmentRoutes from "./routes/investments.js";
 import compareRoutes from "./routes/compares.js";
+import comparisonStatsRoutes from "./routes/comparisonStats.js";
 import errorHandler from "./middleware/errorHandler.js";
 
 const app = express();
@@ -17,6 +18,7 @@ app.get("/", (req, res) =>
 app.use("/api/startups", startupRoutes);
 app.use("/api/investments", investmentRoutes);
 app.use("/api/compares", compareRoutes);
+app.use("/api/comparison-stats", comparisonStatsRoutes);
 
 // 에러 핸들러는 라우터 등록 이후 마지막에 위치
 app.use(errorHandler);

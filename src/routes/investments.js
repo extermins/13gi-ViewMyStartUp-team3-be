@@ -22,19 +22,16 @@ router.get('/', async (req, res, next) => {
   }
 })
 
-// POST /api/investments
-// 투자 등록 — password를 함께 저장해서 수정/삭제 시 본인 확인에 사용
 router.post('/', async (req, res, next) => {
   try {
-    const { companyId, amount, investor, round, password } = req.body
+    const { companyId, amount, name, comment, password } = req.body
     const investment = await prisma.investment.create({
       data: {
         companyId: Number(companyId),
         amount: Number(amount), // 프론트에서 문자열로 넘어올 수 있으므로 Number 변환
-        investor,
-        round,
-        // MVP용 평문 저장 — 실제 서비스에서는 절대 평문 저장 금지, bcrypt 해시 저장 필요
-        password: password ?? null,
+        name,
+        comment,
+        password,
       },
     })
 
@@ -46,14 +43,19 @@ router.post('/', async (req, res, next) => {
   }
 })
 
-// PUT /api/investments/:id
-// 투자 수정 — companyId는 변경 불가이므로 data에서 제외
 router.put('/:id', async (req, res, next) => {
   try {
-    const { amount, investor, round } = req.body
+    const { amount, name, comment, password } = req.body
+    const data = {}
+
+    if (amount !== undefined) data.amount = Number(amount)
+    if (name !== undefined) data.name = name
+    if (comment !== undefined) data.comment = comment
+    if (password !== undefined) data.password = password
+
     const investment = await prisma.investment.update({
       where: { id: Number(req.params.id) },
-      data: { amount: Number(amount), investor, round },
+      data,
     })
 
     const { password: _, ...safeInvestment } = investment

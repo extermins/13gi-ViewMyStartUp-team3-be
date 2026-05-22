@@ -3,83 +3,82 @@ import prisma from '../utils/prisma.js'
 
 const router = Router()
 
-// GET /api/compares?userId=1
-// 비교 목록 조회 — 중첩 include로 compare → companies → company → investments 한 번에 가져옴
+// API-304: 비교 현황 조회
+// companyIds 쿼리 파라미터로 특정 기업들의 비교 횟수 + 전체 순위 반환
 router.get('/', async (req, res, next) => {
   try {
-    const { userId } = req.query
-    const where = userId ? { userId: Number(userId) } : {}
+    const parsedIds = req.query.companyIds
+      ? req.query.companyIds.split(',').map((id) => Number(id)).filter(Boolean)
+      : null
 
-    const compares = await prisma.comparison.findMany({
-      where,
-      include: {
-        // ComparisonCompany(중간 테이블)를 통해 연결된 Company까지 JOIN
-        companies: {
-          include: {
-            company: {
-              include: { investments: true },
-            },
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
+    const allCompanies = await prisma.company.findMany({
+      orderBy: { comparisonCount: 'desc' },
+      include: { investments: true },
     })
-    res.json(compares)
-  } catch (err) {
-    next(err)
+
+    // 동점이면 동순위 (42→1위, 30→2위, 30→2위, 10→4위)
+    let currentRank = 0
+    let previousCount = null
+
+    const rankedCompanies = allCompanies.map((company, index) => {
+      if (company.comparisonCount !== previousCount) {
+        currentRank = index + 1
+        previousCount = company.comparisonCount
+      }
+
+      return {
+        id: company.id,
+        name: company.name,
+        comparisonCount: company.comparisonCount,
+        comparisonRank: currentRank,
+        investments: company.investments,
+      }
+    })
+
+    const companies = parsedIds
+      ? rankedCompanies.filter((company) => parsedIds.includes(company.id))
+      : rankedCompanies
+
+    return res.json({ companies })
+  } catch (error) {
+    next(error)
   }
 })
 
-// GET /api/compares/:id
-// 비교 단건 조회
 router.get('/:id', async (req, res, next) => {
   try {
-    const compare = await prisma.comparison.findUnique({
+    const company = await prisma.company.findUnique({
       where: { id: Number(req.params.id) },
-      include: {
-        companies: {
-          include: { company: { include: { investments: true } } },
-        },
-      },
+      include: { investments: true },
     })
-    if (!compare) return res.status(404).json({ message: '비교를 찾을 수 없습니다' })
-    res.json(compare)
+    if (!company) return res.status(404).json({ message: '기업을 찾을 수 없습니다' })
+    res.json(company)
   } catch (err) {
     next(err)
   }
 })
 
-// POST /api/compares
-// 비교 세트 생성 — Comparison과 ComparisonCompany 중간 테이블 행을 한 번에 생성
-// Prisma의 nested create 문법: companies.create 배열로 중간 테이블 자동 생성
 router.post('/', async (req, res, next) => {
   try {
-    const { title, userId, companyIds } = req.body
+    const { companyIds = [] } = req.body
 
-    const compare = await prisma.comparison.create({
-      data: {
-        title,
-        userId: Number(userId),
-        companies: {
-          // companyIds 배열만큼 ComparisonCompany 행이 생성됨
-          create: companyIds.map((companyId) => ({ companyId: Number(companyId) })),
-        },
-      },
-      include: {
-        companies: { include: { company: true } },
-      },
+    await prisma.company.updateMany({
+      where: { id: { in: companyIds.map(Number) } },
+      data: { comparisonCount: { increment: 1 } },
     })
-    res.status(201).json(compare)
+
+    res.status(201).json({ message: '비교 기업 선택 횟수가 반영되었습니다' })
   } catch (err) {
     next(err)
   }
 })
 
-// DELETE /api/compares/:id
-// 비교 삭제 — schema의 onDelete: Cascade로 ComparisonCompany 중간 테이블 행도 자동 삭제됨
 router.delete('/:id', async (req, res, next) => {
   try {
-    await prisma.comparison.delete({ where: { id: Number(req.params.id) } })
+    await prisma.company.update({
+      where: { id: Number(req.params.id) },
+      data: { comparisonCount: { decrement: 1 } },
+    })
     res.json({ message: '삭제되었습니다' })
   } catch (err) {
     next(err)

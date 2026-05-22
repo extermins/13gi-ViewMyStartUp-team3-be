@@ -5,14 +5,14 @@ import prisma from '../utils/prisma.js'
 const router = Router()
 
 // 프론트엔드가 보내는 sort 값을 Prisma orderBy 형식으로 변환
-// 지원 값: totalInvestment | revenue | createdAt (기본값)
+// 지원 값: revenue | mypickCount | comparisonCount | createdAt (기본값)
 function resolveOrderBy(sort) {
-  const allowed = ['totalInvestment', 'revenue', 'createdAt']
+  const allowed = ['revenue', 'mypickCount', 'comparisonCount', 'createdAt']
   const field = allowed.includes(sort) ? sort : 'createdAt'
   return { [field]: 'desc' }
 }
 
-// GET /api/startups?page=1&limit=10&sort=totalInvestment&keyword=카카오
+// GET /api/startups?page=1&limit=10&sort=mypickCount&keyword=카카오
 // 기업 목록 조회 — 페이지네이션 + 정렬 + 키워드 검색 지원
 router.get('/', async (req, res, next) => {
   try {
@@ -68,20 +68,30 @@ router.get('/:id', async (req, res, next) => {
   }
 })
 
-// POST /api/startups
-// 기업 등록 — ownerId는 optional (인증 미구현 상태)
 router.post('/', async (req, res, next) => {
   try {
-    const { name, description, category, logoUrl, revenue, ownerId } = req.body
+    const {
+      name,
+      description,
+      headCount,
+      headcount,
+      category,
+      imageUrl,
+      revenue,
+      mypickCount,
+      comparisonCount,
+    } = req.body
+
     const company = await prisma.company.create({
       data: {
         name,
         description,
+        headCount: Number(headCount ?? headcount),
         category,
-        logoUrl,
-        revenue,
-        // ownerId가 없으면 null로 저장 (optional 필드)
-        ownerId: ownerId ? Number(ownerId) : null,
+        imageUrl,
+        revenue: Number(revenue),
+        mypickCount: Number(mypickCount ?? 0),
+        comparisonCount: Number(comparisonCount ?? 0),
       },
     })
     // 생성 성공 시 201 Created 반환
@@ -91,14 +101,35 @@ router.post('/', async (req, res, next) => {
   }
 })
 
-// PUT /api/startups/:id
-// 기업 수정 — ownerId는 변경 불가이므로 data에서 제외
 router.put('/:id', async (req, res, next) => {
   try {
-    const { name, description, category, logoUrl, revenue } = req.body
+    const {
+      name,
+      description,
+      headCount,
+      headcount,
+      category,
+      imageUrl,
+      revenue,
+      mypickCount,
+      comparisonCount,
+    } = req.body
+    const data = {}
+
+    if (name !== undefined) data.name = name
+    if (description !== undefined) data.description = description
+    if (headCount !== undefined || headcount !== undefined) {
+      data.headCount = Number(headCount ?? headcount)
+    }
+    if (category !== undefined) data.category = category
+    if (imageUrl !== undefined) data.imageUrl = imageUrl
+    if (revenue !== undefined) data.revenue = Number(revenue)
+    if (mypickCount !== undefined) data.mypickCount = Number(mypickCount)
+    if (comparisonCount !== undefined) data.comparisonCount = Number(comparisonCount)
+
     const company = await prisma.company.update({
       where: { id: Number(req.params.id) },
-      data: { name, description, category, logoUrl, revenue },
+      data,
     })
     res.json(company)
   } catch (err) {
