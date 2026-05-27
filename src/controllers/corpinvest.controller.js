@@ -36,6 +36,7 @@ export default {
       return res.status(500).json({ message: "에러가 발생했습니다." });
     }
   },
+  //기업 투자 정보조회
   GetInvestment: async (req, res) => {
     try {
       const { id } = req.params;
