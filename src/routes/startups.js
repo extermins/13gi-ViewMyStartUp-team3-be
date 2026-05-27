@@ -51,18 +51,41 @@ router.get('/', async (req, res, next) => {
 })
 
 // GET /api/startups/:id
-// 기업 단건 조회 — URL 파라미터로 id를 받음
+// 기업 단건 조회 — 총 투자금액(totalInvestment) + 투자 순위(investmentRank) 포함
 router.get('/:id', async (req, res, next) => {
   try {
-    const company = await prisma.company.findUnique({
-      // req.params.id는 문자열이므로 Number()로 변환 필수
-      where: { id: Number(req.params.id) },
-      include: { investments: true },
+    const companyId = Number(req.params.id)
+
+    // 기업 정보 + 해당 기업 투자 합산을 동시에 조회
+    const [company, investmentAggregate] = await Promise.all([
+      prisma.company.findUnique({
+        where: { id: companyId },
+        // investments 배열 전체 대신 별도 API(GET /api/investments)에서 페이지네이션으로 조회
+        // 여기서는 총합 계산에 필요한 aggregate만 사용
+      }),
+      prisma.investment.aggregate({
+        where: { companyId },
+        _sum: { amount: true },
+      }),
+    ])
+
+    if (!company) return res.status(404).json({ message: '기업을 찾을 수 없습니다' })
+
+    const totalInvestment = investmentAggregate._sum.amount ?? 0
+
+    // 투자 순위 계산 — 나보다 투자금액 합산이 높은 기업 수 + 1
+    // 동점 시 동순위 처리를 위해 직접 쿼리 대신 groupBy aggregate 활용
+    const higherCompanies = await prisma.investment.groupBy({
+      by: ['companyId'],
+      _sum: { amount: true },
+      having: {
+        amount: { _sum: { gt: totalInvestment } },
+      },
     })
 
-    // 존재하지 않는 id 요청 시 404 반환
-    if (!company) return res.status(404).json({ message: '기업을 찾을 수 없습니다' })
-    res.json(company)
+    const investmentRank = higherCompanies.length + 1
+
+    res.json({ ...company, totalInvestment, investmentRank })
   } catch (err) {
     next(err)
   }
@@ -143,6 +166,49 @@ router.delete('/:id', async (req, res, next) => {
   try {
     await prisma.company.delete({ where: { id: Number(req.params.id) } })
     res.json({ message: '삭제되었습니다' })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// POST /api/startups/:id/mypick
+// 나의 픽 추가 — mypickCount 1 증가
+router.post('/:id/mypick', async (req, res, next) => {
+  try {
+    const company = await prisma.company.findUnique({
+      where: { id: Number(req.params.id) },
+    })
+    if (!company) return res.status(404).json({ message: '기업을 찾을 수 없습니다' })
+
+    const updated = await prisma.company.update({
+      where: { id: Number(req.params.id) },
+      data: { mypickCount: { increment: 1 } },
+    })
+    res.json({ mypickCount: updated.mypickCount })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// DELETE /api/startups/:id/mypick
+// 나의 픽 취소 — mypickCount 1 감소 (0 미만으로 내려가지 않도록 guard)
+router.delete('/:id/mypick', async (req, res, next) => {
+  try {
+    const company = await prisma.company.findUnique({
+      where: { id: Number(req.params.id) },
+    })
+    if (!company) return res.status(404).json({ message: '기업을 찾을 수 없습니다' })
+
+    // 이미 0이면 감소 없이 그대로 반환
+    if (company.mypickCount <= 0) {
+      return res.json({ mypickCount: 0 })
+    }
+
+    const updated = await prisma.company.update({
+      where: { id: Number(req.params.id) },
+      data: { mypickCount: { decrement: 1 } },
+    })
+    res.json({ mypickCount: updated.mypickCount })
   } catch (err) {
     next(err)
   }

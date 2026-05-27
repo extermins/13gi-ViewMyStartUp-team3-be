@@ -3,20 +3,48 @@ import prisma from '../utils/prisma.js'
 
 const router = Router()
 
-// GET /api/investments?startupId=1
-// 투자 목록 조회 — startupId 쿼리로 특정 기업의 투자 내역만 필터링 가능
+// 투자 정렬 기준 변환 — amount | createdAt만 허용 (검색 없이 정렬/페이지네이션 중심)
+function resolveInvestmentOrderBy(sort) {
+  const allowed = ['amount', 'createdAt']
+  const field = allowed.includes(sort) ? sort : 'createdAt'
+  return { [field]: 'desc' }
+}
+
+// GET /api/investments?startupId=1&page=1&limit=5&sort=amount
+// 투자 목록 조회 — startupId 필터 + 페이지네이션 + 정렬 지원
 router.get('/', async (req, res, next) => {
   try {
-    const { startupId } = req.query
+    const { startupId, page = 1, limit = 5, sort = 'createdAt' } = req.query
 
-    // startupId가 없으면 전체 조회, 있으면 해당 기업 투자 내역만 조회
     const where = startupId ? { companyId: Number(startupId) } : {}
+    const skip = (Number(page) - 1) * Number(limit)
 
-    const investments = await prisma.investment.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
+    // 목록 + 전체 건수 + 총 투자금액을 동시에 조회
+    const [investments, total, aggregate] = await Promise.all([
+      prisma.investment.findMany({
+        where,
+        skip,
+        take: Number(limit),
+        orderBy: resolveInvestmentOrderBy(sort),
+      }),
+      prisma.investment.count({ where }),
+      // 해당 기업(또는 전체)의 투자 금액 합산
+      prisma.investment.aggregate({
+        where,
+        _sum: { amount: true },
+      }),
+    ])
+
+    // password 필드 제거 — 클라이언트에 비밀번호 노출 방지
+    const safeInvestments = investments.map(({ password: _, ...rest }) => rest)
+
+    res.json({
+      investments: safeInvestments,
+      total,
+      totalAmount: aggregate._sum.amount ?? 0,
+      page: Number(page),
+      limit: Number(limit),
     })
-    res.json(investments)
   } catch (err) {
     next(err)
   }
@@ -24,7 +52,7 @@ router.get('/', async (req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    const { companyId, amount, name, comment, password } = req.body
+    const { companyId, amount, name, comment, password, organization } = req.body
     const investment = await prisma.investment.create({
       data: {
         companyId: Number(companyId),
@@ -32,6 +60,7 @@ router.post('/', async (req, res, next) => {
         name,
         comment,
         password,
+        organization,
       },
     })
 
@@ -45,13 +74,27 @@ router.post('/', async (req, res, next) => {
 
 router.put('/:id', async (req, res, next) => {
   try {
-    const { amount, name, comment, password } = req.body
-    const data = {}
+    const { amount, name, comment, password, organization } = req.body
 
+    // 수정 전 기존 투자 내역 조회 — 비밀번호 검증을 위해 필요
+    const existing = await prisma.investment.findUnique({
+      where: { id: Number(req.params.id) },
+    })
+
+    if (!existing) {
+      return res.status(404).json({ message: '투자 내역을 찾을 수 없습니다' })
+    }
+
+    // 비밀번호가 설정된 투자는 일치 여부 검증 후 수정 허용
+    if (existing.password && existing.password !== password) {
+      return res.status(401).json({ message: '비밀번호가 일치하지 않습니다' })
+    }
+
+    const data = {}
     if (amount !== undefined) data.amount = Number(amount)
     if (name !== undefined) data.name = name
     if (comment !== undefined) data.comment = comment
-    if (password !== undefined) data.password = password
+    if (organization !== undefined) data.organization = organization
 
     const investment = await prisma.investment.update({
       where: { id: Number(req.params.id) },

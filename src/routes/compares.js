@@ -31,7 +31,8 @@ router.get('/', async (req, res, next) => {
         name: company.name,
         comparisonCount: company.comparisonCount,
         comparisonRank: currentRank,
-        investments: company.investments,
+        // password 필드 제거 — 클라이언트에 비밀번호 노출 방지
+        investments: company.investments.map(({ password: _, ...rest }) => rest),
       }
     })
 
