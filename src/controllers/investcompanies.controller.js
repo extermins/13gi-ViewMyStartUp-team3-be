@@ -1,8 +1,7 @@
 import express from "express";
-import { PrismaClient } from "@prisma/client";
+import db from "../utils/prisma.js";
 
 const router = express.Router();
-const db = new PrismaClient();
 
 // BigInt를 Number로 변환하는 함수
 const serializeCompanyData = (data) => {
