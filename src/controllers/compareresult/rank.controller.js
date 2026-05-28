@@ -79,8 +79,8 @@ export const rankCompanies = async (req, res) => {
         description: company.description,
         category: company.category,
         headCount: company.headCount,
-        revenue: company.revenue.toString(),
-        totalInvestment: company.totalInvestment.toString(),
+        revenue: Number(company.revenue),
+        totalInvestment: Number(company.totalInvestment),
         rank: company.rank,
       }));
 

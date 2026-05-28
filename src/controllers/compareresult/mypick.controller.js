@@ -12,7 +12,7 @@ export const getTodo = async (req, res) => {
 
     const company = await prisma.company.findUnique({
       where: { id },
-      select: { id: true, name: true, imageUrl: true },
+      select: { id: true, name: true, imageUrl: true, category: true },
     });
 
     if (!company) {
