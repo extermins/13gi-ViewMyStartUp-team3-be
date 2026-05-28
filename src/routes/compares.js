@@ -59,31 +59,4 @@ router.get('/:id', async (req, res, next) => {
   }
 })
 
-router.post('/', async (req, res, next) => {
-  try {
-    const { companyIds = [] } = req.body
-
-    await prisma.company.updateMany({
-      where: { id: { in: companyIds.map(Number) } },
-      data: { comparisonCount: { increment: 1 } },
-    })
-
-    res.status(201).json({ message: '비교 기업 선택 횟수가 반영되었습니다' })
-  } catch (err) {
-    next(err)
-  }
-})
-
-router.delete('/:id', async (req, res, next) => {
-  try {
-    await prisma.company.update({
-      where: { id: Number(req.params.id) },
-      data: { comparisonCount: { decrement: 1 } },
-    })
-    res.json({ message: '삭제되었습니다' })
-  } catch (err) {
-    next(err)
-  }
-})
-
 export default router
