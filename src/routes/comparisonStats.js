@@ -3,31 +3,35 @@ import prisma from '../utils/prisma.js'
 
 const router = Router()
 
-// 허용된 정렬 필드 (API-305: 비교 현황 정렬 조회)
-const ALLOWED_ORDER_BY_FIELDS = ['mypickCount', 'totalInvestment']
-const ALLOWED_SORT_BY_DIRECTIONS = ['asc', 'desc']
+// 허용된 정렬 필드
+// - mypickCount: 나의 기업 선택 횟수 (CompareStatusPage)
+// - comparisonCount: 비교 기업 선택 횟수 (CompareStatusPage)
+// - totalInvestment: 누적 투자금 (InvestmentStatusPage)
+// - investmentCount: 투자 건수 (InvestmentStatusPage)
+const ALLOWED_SORT_FIELDS = ['mypickCount', 'comparisonCount', 'totalInvestment', 'investmentCount']
+const ALLOWED_DIRECTIONS = ['asc', 'desc']
 
 // API-305 + API-306: 비교 현황 정렬 + 페이지네이션 조회
-// GET /api/comparison-stats?orderBy=mypickCount&sortBy=desc&page=1&size=5
-// - orderBy: 정렬 기준 필드 (mypickCount | totalInvestment)
-// - sortBy: 정렬 방향 (asc | desc)
+// GET /api/comparison-stats?sortBy=mypickCount&order=desc&page=1&pageSize=10
+// - sortBy: 정렬 기준 필드 (mypickCount | comparisonCount | totalInvestment | investmentCount)
+// - order: 정렬 방향 (asc | desc)
 // - page: 페이지 번호 (기본값 1)
-// - size: 페이지당 항목 수 (기본값 10)
+// - pageSize: 페이지당 항목 수 (기본값 10)
 router.get('/', async (req, res, next) => {
   try {
     const {
-      orderBy = 'mypickCount',
-      sortBy = 'desc',
+      sortBy = 'mypickCount',
+      order = 'desc',
       page = 1,
-      size = 10,
+      pageSize = 10,
     } = req.query
 
     // 유효하지 않은 값은 기본값으로 대체
-    const field = ALLOWED_ORDER_BY_FIELDS.includes(orderBy) ? orderBy : 'mypickCount'
-    const direction = ALLOWED_SORT_BY_DIRECTIONS.includes(sortBy) ? sortBy : 'desc'
+    const field = ALLOWED_SORT_FIELDS.includes(sortBy) ? sortBy : 'mypickCount'
+    const direction = ALLOWED_DIRECTIONS.includes(order) ? order : 'desc'
     const currentPage = Math.max(1, Number(page))
-    const pageSize = Math.max(1, Number(size))
-    const skip = (currentPage - 1) * pageSize
+    const pageSizeNum = Math.max(1, Number(pageSize))
+    const skip = (currentPage - 1) * pageSizeNum
 
     // 모든 기업 + 투자 금액 합산을 위해 investments 포함 조회
     const allCompanies = await prisma.company.findMany({
@@ -57,6 +61,8 @@ router.get('/', async (req, res, next) => {
           (sum, inv) => sum + Number(inv.amount),
           0
         ),
+        // 투자 건수
+        investmentCount: company.investments.length,
       }))
       .sort((a, b) => {
         const diff = a[field] - b[field]
@@ -78,14 +84,14 @@ router.get('/', async (req, res, next) => {
 
     // 페이지네이션 적용 (API-306)
     const totalCount = ranked.length
-    const totalPages = Math.ceil(totalCount / pageSize)
-    const companies = ranked.slice(skip, skip + pageSize)
+    const totalPages = Math.ceil(totalCount / pageSizeNum)
+    const data = ranked.slice(skip, skip + pageSizeNum)
 
     return res.json({
-      companies,
+      data,
       totalCount,
       currentPage,
-      pageSize,
+      pageSize: pageSizeNum,
       totalPages,
     })
   } catch (error) {
