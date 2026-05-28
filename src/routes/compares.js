@@ -53,7 +53,52 @@ router.get('/:id', async (req, res, next) => {
       include: { investments: true },
     })
     if (!company) return res.status(404).json({ message: '기업을 찾을 수 없습니다' })
-    res.json(company)
+
+    const { investments, ...rest } = company
+    res.json({
+      ...rest,
+      investments: investments.map(({ password: _, ...inv }) => inv),
+    })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// POST /api/compares/:id/compare — comparisonCount 1 증가
+router.post('/:id/compare', async (req, res, next) => {
+  try {
+    const company = await prisma.company.findUnique({
+      where: { id: Number(req.params.id) },
+    })
+    if (!company) return res.status(404).json({ message: '기업을 찾을 수 없습니다' })
+
+    const updated = await prisma.company.update({
+      where: { id: Number(req.params.id) },
+      data: { comparisonCount: { increment: 1 } },
+    })
+    res.json({ comparisonCount: updated.comparisonCount })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// DELETE /api/compares/:id/compare — comparisonCount 1 감소 (0 미만 방지)
+router.delete('/:id/compare', async (req, res, next) => {
+  try {
+    const company = await prisma.company.findUnique({
+      where: { id: Number(req.params.id) },
+    })
+    if (!company) return res.status(404).json({ message: '기업을 찾을 수 없습니다' })
+
+    if (company.comparisonCount <= 0) {
+      return res.json({ comparisonCount: 0 })
+    }
+
+    const updated = await prisma.company.update({
+      where: { id: Number(req.params.id) },
+      data: { comparisonCount: { decrement: 1 } },
+    })
+    res.json({ comparisonCount: updated.comparisonCount })
   } catch (err) {
     next(err)
   }
