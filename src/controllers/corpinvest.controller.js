@@ -84,6 +84,119 @@ export default {
       return res.status(500).json({ message: "에러가 발생했습니다." });
     }
   },
+
+  //기업에 투자하기
+  PostInvestment: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, password, comment, amount } = req.body;
+
+      const companyId = Number(id);
+
+      //organization : "mystartup"고정 이유 - 해당 웹서비스에서 투자하는 것은 mystartup이기 때문.
+      //다른곳에서 "ohter"로 투자할 수 있는 기능은 없는 것 같음.
+      const createInvestment = {
+        companyId: companyId,
+        name: name,
+        password: password,
+        comment: comment,
+        amount: amount,
+        organization: "mystartup",
+      };
+
+      const investmentInfo = await prisma.investment.create({
+        data: createInvestment,
+      });
+
+      const investmentData = BigIntToString(investmentInfo);
+      return res.status(200).json(investmentData);
+    } catch (error) {
+      console.error("콘솔 로그 에러 내용:", error);
+      return res.status(500).json({ message: "에러가 발생했습니다." });
+    }
+  },
+
+  //비밀번호 체크
+  //비밀번호 체크하는 부분이라 GET query보다는 body를 쓰는게 더 나아 보여서 POST로 작성했습니다.
+  PasswordCheck: async (req, res) => {
+    try {
+      const { password } = req.body;
+      const { id } = req.params;
+      const investId = Number(id);
+
+      const investmentInfo = await prisma.investment.findUnique({
+        where: {
+          id: investId,
+        },
+      });
+      if (!investmentInfo) {
+        return res.status(404).json({ message: "데이터가 없습니다." });
+      }
+
+      if (investmentInfo.password !== password)
+        return res.status(401).json({ message: "비밀번호가 다릅니다." });
+      else {
+        //비밀번호 일치시 성공했다는 응답만 보내준다.
+        return res.status(200).send();
+      }
+    } catch (error) {
+      console.error("콘솔 로그 에러 내용:", error);
+      return res.status(500).json({ message: "에러가 발생했습니다." });
+    }
+  },
+
+  //투자수정하기
+  PatchInvestment: async (req, res) => {
+    try {
+      const { comment, amount } = req.body;
+      const { id } = req.params;
+      const investId = Number(id);
+
+      const patchInvestment = {
+        comment: comment,
+        amount: amount,
+      };
+
+      const investmentInfo = await prisma.investment.update({
+        data: patchInvestment,
+        where: {
+          id: investId,
+        },
+      });
+
+      const investmentData = BigIntToString(investmentInfo);
+      return res.status(200).json(investmentData);
+    } catch (error) {
+      console.error("콘솔 로그 에러 내용:", error);
+      //값이 없으면 prisma는 P2025에러코드를 준다.
+      if (error.code === "P2025") {
+        return res.status(404).json({ message: "데이터가 없습니다." });
+      }
+      return res.status(500).json({ message: "에러가 발생했습니다." });
+    }
+  },
+
+  //투자삭제하기
+  DeleteInvestment: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const investId = Number(id);
+      const investmentInfo = await prisma.investment.delete({
+        where: {
+          id: investId,
+        },
+      });
+
+      return res.status(200).send();
+    } catch (error) {
+      console.error("콘솔 로그 에러 내용:", error);
+      //값이 없으면 prisma는 P2025에러코드를 준다.
+      if (error.code === "P2025") {
+        return res.status(404).json({ message: "데이터가 없습니다." });
+      }
+      return res.status(500).json({ message: "에러가 발생했습니다." });
+    }
+  },
 };
 
 //bigint값이 있으면 json보낼때 TypeError: Do not know how to serialize a BigInt
