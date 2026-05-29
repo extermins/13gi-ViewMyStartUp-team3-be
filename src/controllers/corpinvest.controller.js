@@ -115,6 +115,35 @@ export default {
       return res.status(500).json({ message: "에러가 발생했습니다." });
     }
   },
+
+  //비밀번호 체크
+  //비밀번호 체크하는 부분이라 GET query보다는 body를 쓰는게 더 나아 보여서 POST로 작성했습니다.
+  PasswordCheck: async (req, res) => {
+    try {
+      const { password } = req.body;
+      const { id } = req.params;
+      const investId = Number(id);
+
+      const investmentInfo = await prisma.investment.findUnique({
+        where: {
+          id: investId,
+        },
+      });
+      if (!investmentInfo) {
+        return res.status(404).json({ message: "데이터가 없습니다." });
+      }
+
+      if (investmentInfo.password !== password)
+        return res.status(401).json({ message: "비밀번호가 다릅니다." });
+      else {
+        //비밀번호 일치시 성공했다는 응답만 보내준다.
+        return res.status(200).send();
+      }
+    } catch (error) {
+      console.error("콘솔 로그 에러 내용:", error);
+      return res.status(500).json({ message: "에러가 발생했습니다." });
+    }
+  },
 };
 
 //bigint값이 있으면 json보낼때 TypeError: Do not know how to serialize a BigInt
