@@ -21,7 +21,7 @@ model company {
   headCount       Int
   category        String
   imageUrl        String?
-  revenue         Int
+  revenue         BigInt
   mypickCount     Int          @map("mypick_count")
   comparisonCount Int          @map("comparison_count")
   createdAt       DateTime     @default(now()) @map("created_at")
@@ -30,14 +30,15 @@ model company {
 }
 
 model investment {
-  id        Int      @id @default(autoincrement())
-  name      String
-  password  String
-  comment   String
-  amount    Int
-  companyId Int      @map("company_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id           Int      @id @default(autoincrement())
+  name         String
+  password     String
+  comment      String
+  amount       BigInt
+  organization String
+  companyId    Int      @map("company_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   company company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 }
