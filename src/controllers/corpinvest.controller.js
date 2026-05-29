@@ -144,6 +144,37 @@ export default {
       return res.status(500).json({ message: "에러가 발생했습니다." });
     }
   },
+
+  //투자수정하기
+  PatchInvestment: async (req, res) => {
+    try {
+      const { comment, amount } = req.body;
+      const { id } = req.params;
+      const investId = Number(id);
+
+      const patchInvestment = {
+        comment: comment,
+        amount: amount,
+      };
+
+      const investmentInfo = await prisma.investment.update({
+        data: patchInvestment,
+        where: {
+          id: investId,
+        },
+      });
+
+      const investmentData = BigIntToString(investmentInfo);
+      return res.status(200).json(investmentData);
+    } catch (error) {
+      console.error("콘솔 로그 에러 내용:", error);
+      //값이 없으면 prisma는 P2025에러코드를 준다.
+      if (error.code === "P2025") {
+        return res.status(404).json({ message: "데이터가 없습니다." });
+      }
+      return res.status(500).json({ message: "에러가 발생했습니다." });
+    }
+  },
 };
 
 //bigint값이 있으면 json보낼때 TypeError: Do not know how to serialize a BigInt
