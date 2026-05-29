@@ -84,6 +84,37 @@ export default {
       return res.status(500).json({ message: "에러가 발생했습니다." });
     }
   },
+
+  //기업에 투자하기
+  PostInvestment: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, password, comment, amount } = req.body;
+
+      const companyId = Number(id);
+
+      //organization : "mystartup"고정 이유 - 해당 웹서비스에서 투자하는 것은 mystartup이기 때문.
+      //다른곳에서 "ohter"로 투자할 수 있는 기능은 없는 것 같음.
+      const createInvestment = {
+        companyId: companyId,
+        name: name,
+        password: password,
+        comment: comment,
+        amount: amount,
+        organization: "mystartup",
+      };
+
+      const investmentInfo = await prisma.investment.create({
+        data: createInvestment,
+      });
+
+      const investmentData = BigIntToString(investmentInfo);
+      return res.status(200).json(investmentData);
+    } catch (error) {
+      console.error("콘솔 로그 에러 내용:", error);
+      return res.status(500).json({ message: "에러가 발생했습니다." });
+    }
+  },
 };
 
 //bigint값이 있으면 json보낼때 TypeError: Do not know how to serialize a BigInt
