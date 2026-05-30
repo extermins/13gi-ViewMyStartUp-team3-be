@@ -3,7 +3,7 @@ import prisma from "../../utils/prisma.js";
 export const compareCompanies = async (req, res) => {
   try {
     const ids = req.params.ids.split(",").map(Number);
-    const { orderBy = "revenue", sort = "desc" } = req.query;
+    const { orderBy = "totalAmount", sort = "desc" } = req.query;
 
     const dbSortableFields = ["revenue", "headCount"];
     const isDbField = dbSortableFields.includes(orderBy);
