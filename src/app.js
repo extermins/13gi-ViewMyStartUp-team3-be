@@ -24,8 +24,8 @@ app.use((req, res, next) => {
   res.json = (data) => {
     const serialized = JSON.parse(
       JSON.stringify(data, (_, value) =>
-        typeof value === "bigint" ? Number(value) : value
-      )
+        typeof value === "bigint" ? Number(value) : value,
+      ),
     );
     return originalJson(serialized);
   };
@@ -49,12 +49,12 @@ app.get("/api/companies/rank/:id", rankCompanies);
 app.get("/api/companies/compare/:ids", compareCompanies);
 app.post("/api/invest/create", createInvestment);
 
-// 나의 기업 비교 - 기업 목록 조회
-app.get("/mypick/companies", mypickController.GetCompanies);
-// 나의 기업 비교 - 나의 기업 선택
-app.patch("/mypick/companies/:id/mypick", mypickController.PatchMypick);
-// 나의 기업 비교 - 비교 기업 선택
-app.patch("/mypick/companies/:id/comparison", mypickController.PatchComparison);
+app.get("/api/mypick/companies", mypickController.GetCompanies);
+app.patch("/api/mypick/companies/:id/mypick", mypickController.PatchMypick);
+app.patch(
+  "/api/mypick/companies/:id/comparison",
+  mypickController.PatchComparison,
+);
 
 app.get("/api/companies/:id", corpInvestController.getCompany);
 app.get("/api/companies/:id/investment", corpInvestController.getInvestment);
