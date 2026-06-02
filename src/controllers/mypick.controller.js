@@ -30,38 +30,48 @@ export default {
       res.status(500).json({ message: "서버 오류 발생" });
     }
   },
+
   // 나의 기업 비교 - 나의 기업 선택
-  // PostMypick: async (req, res) => {
-  //   const { id } = req.params;
-  //   const parsedId = parseInt(id);
+  PatchMypick: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parsedId = parseInt(id);
 
-  //   if (isNaN(parsedId)) {
-  //     return res.status(400).json({ message: "id가 숫자가 아닙니다" });
-  //   }
+      if (isNaN(parsedId)) {
+        return res.status(400).json({ message: "id가 숫자가 아닙니다" });
+      }
 
-  //   const mypick = await prisma.company.update({
-  //     where: { id: parsedId },
-  //     select: { mypickCount: true },
-  //     data: { mypickCount: { increment: 1 } },
-  //   });
+      const mypick = await prisma.company.update({
+        where: { id: parsedId },
+        select: { mypickCount: true },
+        data: { mypickCount: { increment: 1 } },
+      });
 
-  //   res.status(200).json({ data: mypick });
-  // },
+      res.status(200).json({ data: mypick });
+    } catch (error) {
+      res.status(500).json({ message: "서버 오류 발생" });
+    }
+  },
+
   // 나의 기업 비교 - 비교 기업 선택
-  //   PostComparison: async (req, res) => {
-  //     const { id } = req.params;
-  //     const parsedId = parseInt(id);
+  PatchComparison: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parsedId = parseInt(id);
 
-  //     if (isNaN(parsedId)) {
-  //       return res.status(400).json({ message: "id가 숫자가 아닙니다" });
-  //     }
+      if (isNaN(parsedId)) {
+        return res.status(400).json({ message: "id가 숫자가 아닙니다" });
+      }
 
-  //     const comparison = await prisma.company.update({
-  //       where: { id: parsedId },
-  //       select: { comparisonCount: true },
-  //       data: { comparisonCount: { increment: 1 } },
-  //     });
+      const comparison = await prisma.company.update({
+        where: { id: parsedId },
+        select: { comparisonCount: true },
+        data: { comparisonCount: { increment: 1 } },
+      });
 
-  //     res.status(200).json({ data: comparison });
-  //   },
+      res.status(200).json({ data: comparison });
+    } catch (error) {
+      res.status(500).json({ message: "서버 오류 발생" });
+    }
+  },
 };
