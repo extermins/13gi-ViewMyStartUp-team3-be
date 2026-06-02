@@ -1,10 +1,6 @@
 import express from "express";
 import cors from "cors";
-import {
-  getCompanies,
-  postComparison,
-  postMypick,
-} from "./controllers/compare.controller";
+import mypickController from "./controllers/mypick.controller.js";
 
 const app = express();
 
@@ -16,10 +12,10 @@ app.get("/", (req, res) =>
 );
 
 // 나의 기업 비교 - 기업 목록 조회
-app.get("/compare/companies", getCompanies);
+app.get("/mypick/companies", mypickController.GetCompanies);
 // 나의 기업 비교 - 나의 기업 선택
-app.get("/compare/companies/:id/mypick", postMypick);
+app.patch("/mypick/companies/:id/mypick", mypickController.PostMypick);
 // 나의 기업 비교 - 비교 기업 선택
-app.get("/compare/companies/:id/comparison", postComparison);
+app.patch("/mypick/companies/:id/comparison", mypickController.PostComparison);
 
 export default app;
