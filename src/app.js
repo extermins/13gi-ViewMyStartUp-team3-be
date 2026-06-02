@@ -7,6 +7,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// 투자 현황 - 조회
 app.get("/api/investcompanies", investCompaniesController.getInvestCompanies);
 
 app.get("/", (req, res) =>
