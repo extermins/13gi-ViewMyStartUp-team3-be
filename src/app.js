@@ -14,8 +14,8 @@ app.get("/", (req, res) =>
 // 나의 기업 비교 - 기업 목록 조회
 app.get("/mypick/companies", mypickController.GetCompanies);
 // 나의 기업 비교 - 나의 기업 선택
-app.patch("/mypick/companies/:id/mypick", mypickController.PostMypick);
+app.patch("/mypick/companies/:id/mypick", mypickController.PatchMypick);
 // 나의 기업 비교 - 비교 기업 선택
-app.patch("/mypick/companies/:id/comparison", mypickController.PostComparison);
+app.patch("/mypick/companies/:id/comparison", mypickController.PatchComparison);
 
 export default app;

@@ -1,7 +1,7 @@
 import prisma from "../utils/prisma.js";
 
 export default {
-  // 나의 기업 비교 - 기업 목록 조회
+  // 나의 기업 비교 - 기업 목록 조회.
   GetCompanies: async (req, res) => {
     try {
       const { search = "", page = 1, limit = 5 } = req.query;
