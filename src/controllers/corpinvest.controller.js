@@ -2,7 +2,7 @@ import prisma from "../utils/prisma.js";
 
 export default {
   //기업 상세 조회
-  GetCompany: async (req, res) => {
+  getCompany: async (req, res) => {
     try {
       const { id } = req.params;
       const companyId = Number(id);
@@ -37,7 +37,7 @@ export default {
     }
   },
   //기업 투자 정보조회
-  GetInvestment: async (req, res) => {
+  getInvestment: async (req, res) => {
     try {
       const { id } = req.params;
       const { page = 1, pageSize = 10 } = req.query; //아무런 값이 안들어올 수도 있으니 기본 값 설정.
@@ -86,39 +86,40 @@ export default {
   },
 
   //기업에 투자하기
-  PostInvestment: async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { name, password, comment, amount } = req.body;
+  //같은 기능의 API가 있는 것 같아서 주석처리.
+  // postInvestment: async (req, res) => {
+  //   try {
+  //     const { id } = req.params;
+  //     const { name, password, comment, amount } = req.body;
 
-      const companyId = Number(id);
+  //     const companyId = Number(id);
 
-      //organization : "mystartup"고정 이유 - 해당 웹서비스에서 투자하는 것은 mystartup이기 때문.
-      //다른곳에서 "ohter"로 투자할 수 있는 기능은 없는 것 같음.
-      const createInvestment = {
-        companyId: companyId,
-        name: name,
-        password: password,
-        comment: comment,
-        amount: amount,
-        organization: "mystartup",
-      };
+  //     //organization : "mystartup"고정 이유 - 해당 웹서비스에서 투자하는 것은 mystartup이기 때문.
+  //     //다른곳에서 "ohter"로 투자할 수 있는 기능은 없는 것 같음.
+  //     const createInvestment = {
+  //       companyId: companyId,
+  //       name: name,
+  //       password: password,
+  //       comment: comment,
+  //       amount: amount,
+  //       organization: "mystartup",
+  //     };
 
-      const investmentInfo = await prisma.investment.create({
-        data: createInvestment,
-      });
+  //     const investmentInfo = await prisma.investment.create({
+  //       data: createInvestment,
+  //     });
 
-      const investmentData = BigIntToString(investmentInfo);
-      return res.status(200).json(investmentData);
-    } catch (error) {
-      console.error("콘솔 로그 에러 내용:", error);
-      return res.status(500).json({ message: "에러가 발생했습니다." });
-    }
-  },
+  //     const investmentData = BigIntToString(investmentInfo);
+  //     return res.status(200).json(investmentData);
+  //   } catch (error) {
+  //     console.error("콘솔 로그 에러 내용:", error);
+  //     return res.status(500).json({ message: "에러가 발생했습니다." });
+  //   }
+  // },
 
   //비밀번호 체크
   //비밀번호 체크하는 부분이라 GET query보다는 body를 쓰는게 더 나아 보여서 POST로 작성했습니다.
-  PasswordCheck: async (req, res) => {
+  passwordCheck: async (req, res) => {
     try {
       const { password } = req.body;
       const { id } = req.params;
@@ -146,7 +147,7 @@ export default {
   },
 
   //투자수정하기
-  PatchInvestment: async (req, res) => {
+  patchInvestment: async (req, res) => {
     try {
       const { comment, amount } = req.body;
       const { id } = req.params;
@@ -177,7 +178,7 @@ export default {
   },
 
   //투자삭제하기
-  DeleteInvestment: async (req, res) => {
+  deleteInvestment: async (req, res) => {
     try {
       const { id } = req.params;
       const investId = Number(id);
