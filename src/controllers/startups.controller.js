@@ -26,7 +26,12 @@ async function getList(req, res, next) {
       prisma.company.count({ where }),
     ])
 
-    res.json({ companies, total, page: Number(page), limit: Number(limit) })
+    const safeCompanies = companies.map(({ investments, ...company }) => ({
+      ...company,
+      investments: investments.map(({ password: _, ...investment }) => investment),
+    }))
+
+    res.json({ companies: safeCompanies, total, page: Number(page), limit: Number(limit) })
   } catch (err) {
     next(err)
   }
