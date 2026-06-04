@@ -50,7 +50,8 @@ app.delete("/api/startups/:id/mypick", startupsController.removeMypick);
 app.get("/api/investments", investmentsController.getList);
 app.post("/api/investments", investmentsController.create);
 app.put("/api/investments/:id", investmentsController.update);
-app.delete("/api/investments/:id", investmentsController.remove);
+// 투자삭제 경로가 겹쳐서 주석처리 해둡니다.
+// app.delete("/api/investments/:id", investmentsController.remove);
 
 app.get("/api/compares", comparesController.getList);
 app.get("/api/compares/:id", comparesController.getOne);
