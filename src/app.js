@@ -11,6 +11,7 @@ import { createInvestment } from "./controllers/invest/invest.controller.js";
 import mypickController from "./controllers/mypick.controller.js";
 import corpInvestController from "./controllers/corpinvest.controller.js";
 import investCompaniesController from "./controllers/investcompanies.controller.js";
+import { getCompanies } from "./controllers/companies.controller.js";
 
 const app = express();
 
@@ -24,8 +25,8 @@ app.use((req, res, next) => {
   res.json = (data) => {
     const serialized = JSON.parse(
       JSON.stringify(data, (_, value) =>
-        typeof value === "bigint" ? Number(value) : value
-      )
+        typeof value === "bigint" ? Number(value) : value,
+      ),
     );
     return originalJson(serialized);
   };
@@ -34,6 +35,9 @@ app.use((req, res, next) => {
 
 // 투자 현황 - 조회
 app.get("/api/investcompanies", investCompaniesController.getInvestCompanies);
+
+// 메인 페이지 - 기업 전체 리스트 조회
+app.get("/api/companies", getCompanies);
 
 app.get("/", (req, res) =>
   res.json({ status: "ok", message: "연결 테스트 확인용임" }),
