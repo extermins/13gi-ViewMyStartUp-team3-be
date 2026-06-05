@@ -1,9 +1,9 @@
 import express from "express";
 import cors from "cors";
-import startupRoutes from "./routes/startups.js";
-import investmentRoutes from "./routes/investments.js";
-import compareRoutes from "./routes/compares.js";
-import comparisonStatsRoutes from "./routes/comparisonStats.js";
+import startupsController from "./controllers/startups.controller.js";
+import investmentsController from "./controllers/investments.controller.js";
+import comparesController from "./controllers/compares.controller.js";
+import comparisonStatsController from "./controllers/comparisonStats.controller.js";
 import { getTodo } from "./controllers/compareresult/mypick.controller.js";
 import { compareCompanies } from "./controllers/compareresult/compare.controller.js";
 import { rankCompanies } from "./controllers/compareresult/rank.controller.js";
@@ -43,22 +43,38 @@ app.get("/", (req, res) =>
   res.json({ status: "ok", message: "연결 테스트 확인용임" }),
 );
 
-app.use("/api/startups", startupRoutes);
-app.use("/api/investments", investmentRoutes);
-app.use("/api/compares", compareRoutes);
-app.use("/api/comparison-stats", comparisonStatsRoutes);
+app.get("/api/startups", startupsController.getList);
+app.get("/api/startups/:id", startupsController.getOne);
+app.post("/api/startups", startupsController.create);
+app.put("/api/startups/:id", startupsController.update);
+app.delete("/api/startups/:id", startupsController.remove);
+app.post("/api/startups/:id/mypick", startupsController.addMypick);
+app.delete("/api/startups/:id/mypick", startupsController.removeMypick);
+
+app.get("/api/investments", investmentsController.getList);
+app.post("/api/investments", investmentsController.create);
+app.put("/api/investments/:id", investmentsController.update);
+// 투자삭제 경로가 겹쳐서 주석처리 해둡니다.
+// app.delete("/api/investments/:id", investmentsController.remove);
+
+app.get("/api/compares", comparesController.getList);
+app.get("/api/compares/:id", comparesController.getOne);
+app.post("/api/compares/:id/compare", comparesController.addCompare);
+app.delete("/api/compares/:id/compare", comparesController.removeCompare);
+
+app.get("/api/comparison-stats", comparisonStatsController.getList);
 
 app.get("/api/companies/mypick/:id", getTodo);
 app.get("/api/companies/rank/:id", rankCompanies);
 app.get("/api/companies/compare/:ids", compareCompanies);
 app.post("/api/invest/create", createInvestment);
 
-// 나의 기업 비교 - 기업 목록 조회
-app.get("/mypick/companies", mypickController.GetCompanies);
-// 나의 기업 비교 - 나의 기업 선택
-app.patch("/mypick/companies/:id/mypick", mypickController.PatchMypick);
-// 나의 기업 비교 - 비교 기업 선택
-app.patch("/mypick/companies/:id/comparison", mypickController.PatchComparison);
+app.get("/api/mypick/companies", mypickController.GetCompanies);
+app.patch("/api/mypick/companies/:id/mypick", mypickController.PatchMypick);
+app.patch(
+  "/api/mypick/companies/:id/comparison",
+  mypickController.PatchComparison,
+);
 
 app.get("/api/companies/:id", corpInvestController.getCompany);
 app.get("/api/companies/:id/investment", corpInvestController.getInvestment);
